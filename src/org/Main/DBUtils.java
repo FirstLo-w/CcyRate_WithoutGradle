@@ -1,0 +1,96 @@
+package org.Main;
+
+//import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.ResultSet;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.logging.Logger;
+
+public class DBUtils {
+    private static Logger log = Logger.getLogger(DBUtils.class.getName());
+
+    public static int appendToDb(List<Valute> valutes, Connection connection) throws SQLException {
+        String sqlInsert = """
+                INSERT OR REPLACE INTO Currency (Date, NumCode, CharCode, Nominal, Name, Value, VunitRate)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """;
+        try (PreparedStatement stmt = connection.prepareStatement(sqlInsert)) {
+            for (Valute value : valutes) {
+                final String dateStr = DateUtils.formatDate(
+                        value.date,
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                );
+
+                int idx = 0;
+                stmt.setString(++idx, dateStr);
+                stmt.setInt(++idx, value.numCode);
+                stmt.setString(++idx, value.charCode);
+                stmt.setInt(++idx, value.nominal);
+                stmt.setString(++idx, value.name);
+                stmt.setFloat(++idx, value.value);
+                stmt.setFloat(++idx, value.vUnitRate);
+
+                stmt.executeUpdate();
+            }
+        }
+        // TODO: Тут бы возвращать количество добавленных записей в БД
+        //       Особенно с учетом уникальности записей
+        //       Реализовал через разницу между кол-вом записей перед и после добавления
+        return valutes.size();
+    }
+
+    public static int getCountCcy(Connection connection) throws SQLException {
+        String sqlGetCount = """
+                    SELECT count()
+                    FROM Currency
+                    """;
+        int cnt = 0;
+        try (
+                Statement stmt = connection.createStatement();
+                ResultSet rs = stmt.executeQuery(sqlGetCount);
+        ) {
+            if (rs.next()) {
+                cnt = rs.getInt(1);
+            }
+        }
+        return cnt;
+    }
+
+    public static void validateDb(Connection connection) throws SQLException {
+        final String sqlCheckTable = """
+                    SELECT count()
+                    FROM sqlite_master
+                    WHERE type = 'table' AND name = 'Currency'
+                    """;
+        final String sqlCreateTable = """
+                    CREATE TABLE 'Currency' (
+                        Date TEXT(10),
+                        NumCode INTEGER,
+                        CharCode TEXT,
+                        Nominal INTEGER,
+                        Name TEXT,
+                        Value REAL,
+                        VunitRate REAL,
+                        PRIMARY KEY(Date, NumCode)
+                    );
+                    """;
+
+        try (
+                Statement stmt = connection.createStatement();
+                ResultSet rs = stmt.executeQuery(sqlCheckTable);
+        ) {
+            if (rs.next()) {
+                if (rs.getInt(1) == 0) {
+                    System.out.println("Creating table");
+                    stmt.executeUpdate(sqlCreateTable);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
