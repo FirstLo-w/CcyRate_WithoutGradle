@@ -1,6 +1,5 @@
 package org.Main;
 
-//import java.sql.*;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,10 +11,9 @@ import java.util.List;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 public class DBUtils {
-    private static Logger log = Logger.getLogger(DBUtils.class.getName());
+    private static final Logger log = Logger.getLogger(DBUtils.class.getName());
         static {
             FileHandler fh = null;
             try {
@@ -61,7 +59,7 @@ public class DBUtils {
         int cnt = 0;
         try (
                 Statement stmt = connection.createStatement();
-                ResultSet rs = stmt.executeQuery(sqlGetCount);
+                ResultSet rs = stmt.executeQuery(sqlGetCount)
         ) {
             if (rs.next()) {
                 cnt = rs.getInt(1);
@@ -70,7 +68,7 @@ public class DBUtils {
         return cnt;
     }
 
-    public static void validateDb(Connection connection) throws SQLException {
+    public static void validateDb(Connection connection) {
         final String sqlCheckTable = """
                     SELECT count()
                     FROM sqlite_master
@@ -91,7 +89,7 @@ public class DBUtils {
 
         try (
                 Statement stmt = connection.createStatement();
-                ResultSet rs = stmt.executeQuery(sqlCheckTable);
+                ResultSet rs = stmt.executeQuery(sqlCheckTable)
         ) {
             if (rs.next()) {
                 log.info("Check table existing");
