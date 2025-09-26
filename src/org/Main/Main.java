@@ -54,6 +54,8 @@ public class Main {
         try (final Connection c = DriverManager.getConnection("jdbc:sqlite:" + dbPath)) {
             System.out.println("DB connected");
 
+            DBUtils.validateDb(c);
+
             int ccyAddCounter = DBUtils.getCountCcy(c);
             int ccyCounter = 0;
             for (LocalDate date : dateList) {

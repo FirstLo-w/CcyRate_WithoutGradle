@@ -1,6 +1,7 @@
 package org.Main;
 
 //import java.sql.*;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -8,10 +9,22 @@ import java.sql.Statement;
 import java.sql.ResultSet;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 public class DBUtils {
     private static Logger log = Logger.getLogger(DBUtils.class.getName());
+        static {
+            FileHandler fh = null;
+            try {
+                fh = new FileHandler("LogFile.log", 1000000, 10, true);
+            } catch (IOException ex) {
+                log.log(Level.SEVERE, "Exception of FileHandler using", ex);
+            }
+            log.addHandler(fh);
+        }
 
     public static int appendToDb(List<Valute> valutes, Connection connection) throws SQLException {
         String sqlInsert = """
@@ -37,9 +50,6 @@ public class DBUtils {
                 stmt.executeUpdate();
             }
         }
-        // TODO: Тут бы возвращать количество добавленных записей в БД
-        //       Особенно с учетом уникальности записей
-        //       Реализовал через разницу между кол-вом записей перед и после добавления
         return valutes.size();
     }
 
@@ -84,12 +94,18 @@ public class DBUtils {
                 ResultSet rs = stmt.executeQuery(sqlCheckTable);
         ) {
             if (rs.next()) {
+                log.info("Check table existing");
                 if (rs.getInt(1) == 0) {
-                    System.out.println("Creating table");
+                    log.warning("Table not found");
+                    log.info("Creating table");
                     stmt.executeUpdate(sqlCreateTable);
+                    log.fine("Table created");
+                } else {
+                    log.fine("Table found");
                 }
             }
         } catch (SQLException e) {
+            log.log(Level.SEVERE, "Exception: ", e);
             throw new RuntimeException(e);
         }
     }
