@@ -7,6 +7,7 @@ import java.time.LocalDate;
 
 public class Valute {
     public LocalDate date;
+    public LocalDate createDate;
     public int numCode;
     public String charCode;
     public int nominal;
@@ -16,6 +17,7 @@ public class Valute {
 
     public Valute(
             LocalDate date,
+            LocalDate createDate,
             int numCode,
             String charCode,
             int nominal,
@@ -24,6 +26,7 @@ public class Valute {
             float vUnitRate
     ) {
         this.date = date;
+        this.createDate = createDate;
         this.numCode = numCode;
         this.charCode = charCode;
         this.nominal = nominal;
@@ -47,6 +50,7 @@ public class Valute {
     public static Valute parse(LocalDate date, Element element) {
         return new Valute(
                 date,
+                DateUtils.parseDateTime(getTagText(element, "CreateDate")),
                 Integer.parseInt(getTagText(element, "NumCode")),
                 getTagText(element, "CharCode"),
                 Integer.parseInt(getTagText(element, "Nominal")),
@@ -59,8 +63,8 @@ public class Valute {
     @Override
     public String toString(){
         return MessageFormat.format(
-                "Valute<{0};{1};{2};{3};{4};{5}>",
-                numCode, charCode, nominal, name, value, vUnitRate
+                "Valute<{0};{1};{2};{3};{4};{5};{6}>",
+                DateUtils.formatDateTime(createDate), numCode, charCode, nominal, name, value, vUnitRate
         );
     }
 }

@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.ResultSet;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.logging.FileHandler;
@@ -25,30 +26,73 @@ public class DBUtils {
         }
 
     public static int appendToDb(List<Valute> valutes, Connection connection) throws SQLException {
+        int count = 0;
+        for (Valute value : valutes) {
+            count += insertRate(connection, value);
+        }
+        return count;
+    }
+
+    public static int insertRate(Connection connection , Valute valute) {
         String sqlInsert = """
-                INSERT OR REPLACE INTO Currency (Date, NumCode, CharCode, Nominal, Name, Value, VunitRate)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT OR IGNORE INTO Currency (Date, CreateDate, NumCode, CharCode, Nominal, Name, Value, VunitRate)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """;
         try (PreparedStatement stmt = connection.prepareStatement(sqlInsert)) {
-            for (Valute value : valutes) {
-                final String dateStr = DateUtils.formatDate(
-                        value.date,
-                        DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                );
+            final String dateStr = DateUtils.formatDate(
+                    valute.date,
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd")
+            );
+            int idx = 0;
+            stmt.setString(++idx, dateStr);
+            stmt.setString(++idx, DateUtils.getCurrentDateStr());
+            stmt.setInt(++idx, valute.numCode);
+            stmt.setString(++idx, valute.charCode);
+            stmt.setInt(++idx, valute.nominal);
+            stmt.setString(++idx, valute.name);
+            stmt.setFloat(++idx, valute.value);
+            stmt.setFloat(++idx, valute.vUnitRate);
 
-                int idx = 0;
-                stmt.setString(++idx, dateStr);
-                stmt.setInt(++idx, value.numCode);
-                stmt.setString(++idx, value.charCode);
-                stmt.setInt(++idx, value.nominal);
-                stmt.setString(++idx, value.name);
-                stmt.setFloat(++idx, value.value);
-                stmt.setFloat(++idx, value.vUnitRate);
-
-                stmt.executeUpdate();
-            }
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            log.log(Level.SEVERE, "Exception: ", e);
+            return 0;
         }
-        return valutes.size();
+        return 1;
+    }
+
+    public static Valute getRate(Connection connection, LocalDate date, int ccy) {
+        String sqlGetCount = """
+                    SELECT Date, CreateDate, NumCode, CharCode, Nominal, Name, Value, VunitRate
+                    FROM Currency
+                    WHERE Date = ? AND NumCode = ?
+                    """;
+        try (PreparedStatement stmt = connection.prepareStatement(sqlGetCount)){
+            stmt.setString(0, DateUtils.formatDate(date));
+            stmt.setInt(1, ccy);
+            ResultSet rs = stmt.executeQuery(sqlGetCount);
+            if (rs.next()) {
+                int idx = 0;
+                String rateDate = rs.getString(++idx);
+                String createDate = rs.getString(++idx);
+                return new Valute(
+                        DateUtils.parseDate(rateDate),
+                        DateUtils.parseDate(createDate),
+                        rs.getInt(++idx),
+                        rs.getString(++idx),
+                        rs.getInt(++idx),
+                        rs.getString(++idx),
+                        rs.getFloat(++idx),
+                        rs.getFloat(++idx)
+                        );
+            } else {
+                log.log(Level.SEVERE, "Rate getting. Rate not found");
+            }
+        } catch (SQLException e) {
+            log.log(Level.SEVERE, "Exception: ", e);
+            throw new RuntimeException(e);
+        }
+        return null;
     }
 
     public static int getCountCcy(Connection connection) throws SQLException {
@@ -77,6 +121,7 @@ public class DBUtils {
         final String sqlCreateTable = """
                     CREATE TABLE 'Currency' (
                         Date TEXT(10),
+                        CreateDate TEXT(10),
                         NumCode INTEGER,
                         CharCode TEXT,
                         Nominal INTEGER,
@@ -86,7 +131,6 @@ public class DBUtils {
                         PRIMARY KEY(Date, NumCode)
                     );
                     """;
-
         try (
                 Statement stmt = connection.createStatement();
                 ResultSet rs = stmt.executeQuery(sqlCheckTable)

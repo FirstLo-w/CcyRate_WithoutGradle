@@ -1,5 +1,6 @@
 package org.Main;
 
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -8,13 +9,26 @@ import java.util.List;
 
 public class DateUtils {
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    public static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy hh24:mm:ss");
 
     public static LocalDate parseDate(String dateStr) throws DateTimeParseException {
         return LocalDate.parse(dateStr, DATE_FORMATTER);
     }
 
+    public static LocalDate parseDateTime(String dateStr) throws DateTimeParseException {
+        return LocalDate.parse(dateStr, DATETIME_FORMATTER);
+    }
+
+    public static String getCurrentDateStr() throws DateTimeException {
+        return formatDate(LocalDate.now(), DateTimeFormatter.ofPattern("dd.MM.yyyy hh24:mm:ss"));
+    }
+
     public static String formatDate(LocalDate date) {
         return formatDate(date, DATE_FORMATTER);
+    }
+
+    public static String formatDateTime(LocalDate date) {
+        return formatDate(date, DATETIME_FORMATTER);
     }
 
     public static String formatDate(LocalDate date, DateTimeFormatter format) {
