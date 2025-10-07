@@ -10,12 +10,14 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.StringReader;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -85,6 +87,35 @@ public class CbrRu {
             }
 
             return valuteList;
+
+        } catch (IOException | ParserConfigurationException | SAXException e) {
+            throw new CbrRuException(e.toString(), e);
+        }
+    }
+
+    public static Valute getValute(LocalDate date, int ccy) throws CbrRuException {
+        try {
+            final String url = "http://www.cbr.ru/scripts/XML_daily.asp?date_req=" + DateUtils.formatDate(date);
+            final String response = doGet(url);
+
+            try {
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder builder = factory.newDocumentBuilder();
+                Document doc = builder.parse(new ByteArrayInputStream(response.getBytes()));
+
+                XPathFactory xPathFactory = XPathFactory.newInstance();
+                XPath xpath = xPathFactory.newXPath();
+
+                DecimalFormat df = new DecimalFormat("000");
+                String expression = "//Valute[NumCode='" + df.format(ccy) + "']";
+                Node valute = (Node) xpath.evaluate(expression, doc, XPathConstants.NODE);
+                if (valute != null) {
+                    return Valute.parse(date, (Element) valute);
+                }
+                return null;
+            } catch (XPathExpressionException e) {
+                throw new RuntimeException(e);
+            }
 
         } catch (IOException | ParserConfigurationException | SAXException e) {
             throw new CbrRuException(e.toString(), e);

@@ -2,6 +2,7 @@ package org.Main;
 
 import java.time.DateTimeException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -9,29 +10,32 @@ import java.util.List;
 
 public class DateUtils {
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    public static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy hh24:mm:ss");
+    public static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
     public static LocalDate parseDate(String dateStr) throws DateTimeParseException {
         return LocalDate.parse(dateStr, DATE_FORMATTER);
     }
 
-    public static LocalDate parseDateTime(String dateStr) throws DateTimeParseException {
-        return LocalDate.parse(dateStr, DATETIME_FORMATTER);
+    public static LocalDateTime parseDateTime(String dateStr) throws DateTimeParseException {
+        return LocalDateTime.parse(dateStr, DATETIME_FORMATTER);
     }
 
     public static String getCurrentDateStr() throws DateTimeException {
-        return formatDate(LocalDate.now(), DateTimeFormatter.ofPattern("dd.MM.yyyy hh24:mm:ss"));
+        return formatDateTime(LocalDateTime.now(), DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
     }
 
     public static String formatDate(LocalDate date) {
         return formatDate(date, DATE_FORMATTER);
     }
 
-    public static String formatDateTime(LocalDate date) {
-        return formatDate(date, DATETIME_FORMATTER);
+    public static String formatDateTime(LocalDateTime date) {
+        return formatDateTime(date, DATETIME_FORMATTER);
     }
 
     public static String formatDate(LocalDate date, DateTimeFormatter format) {
+        return date.format(format);
+    }
+    public static String formatDateTime(LocalDateTime date, DateTimeFormatter format) {
         return date.format(format);
     }
 

@@ -4,10 +4,11 @@ import org.w3c.dom.Element;
 
 import java.text.MessageFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class Valute {
     public LocalDate date;
-    public LocalDate createDate;
+    public LocalDateTime createDate;
     public int numCode;
     public String charCode;
     public int nominal;
@@ -17,7 +18,7 @@ public class Valute {
 
     public Valute(
             LocalDate date,
-            LocalDate createDate,
+            LocalDateTime createDate,
             int numCode,
             String charCode,
             int nominal,
@@ -50,7 +51,7 @@ public class Valute {
     public static Valute parse(LocalDate date, Element element) {
         return new Valute(
                 date,
-                DateUtils.parseDateTime(getTagText(element, "CreateDate")),
+                LocalDateTime.now(),
                 Integer.parseInt(getTagText(element, "NumCode")),
                 getTagText(element, "CharCode"),
                 Integer.parseInt(getTagText(element, "Nominal")),

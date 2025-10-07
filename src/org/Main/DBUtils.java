@@ -25,7 +25,7 @@ public class DBUtils {
             log.addHandler(fh);
         }
 
-    public static int appendToDb(List<Valute> valutes, Connection connection) throws SQLException {
+    public static int appendToDb(List<Valute> valutes, Connection connection) {
         int count = 0;
         for (Valute value : valutes) {
             count += insertRate(connection, value);
@@ -77,7 +77,7 @@ public class DBUtils {
                 String createDate = rs.getString(++idx);
                 return new Valute(
                         DateUtils.parseDate(rateDate),
-                        DateUtils.parseDate(createDate),
+                        DateUtils.parseDateTime(createDate),
                         rs.getInt(++idx),
                         rs.getString(++idx),
                         rs.getInt(++idx),
